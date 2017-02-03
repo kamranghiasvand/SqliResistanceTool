@@ -11,8 +11,10 @@ namespace SqliResistanceTool
         static void Main(string[] args)
         {
             Crawler.Crawler c = new Crawler.Crawler();
-            c.SiteRoot = "http://localhost/";
-            c.LoginPage = "/login.php";
+            c.SiteRoot =new Uri( "http://localhost/");
+            c.LoginPage =new Uri(c.SiteRoot, "/login.php");
+            c.LoginData.Add("username", "admin");
+            c.LoginData.Add("password", "password");
             c.Start();
         }
     }
