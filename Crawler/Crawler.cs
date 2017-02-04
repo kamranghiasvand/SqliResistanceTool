@@ -1,12 +1,9 @@
-﻿using HtmlAgilityPack;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace Crawler
 {
@@ -20,7 +17,7 @@ namespace Crawler
         public Dictionary<string, string> LoginData { get; set; }
         public List<string> Cookies { get; set; }
 
-        private Thread thread;
+        private readonly Thread thread;
         private bool loginNedded;
         private WebHeaderCollection header = new WebHeaderCollection();
         public bool IsRunning { get; private set; }
@@ -30,7 +27,7 @@ namespace Crawler
             VisitedPages = new List<Uri>();
             AvaliablePage = new Queue<Uri>();
             Cookies = new List<string>();
-            thread = new Thread(new ThreadStart(ThreadWorker));
+            thread = new Thread(ThreadWorker);
         }
         public void Start()
         {
@@ -50,9 +47,6 @@ namespace Crawler
             {
                 try
                 {
-
-                    Uri url;
-                    string content = null;
                     try
                     {
                         if (loginNedded)
@@ -61,36 +55,30 @@ namespace Crawler
                                 return;
                             continue;
                         }
-                        else
-                        {
-                            if (AvaliablePage.Count == 0)
-                                break;
-                            var s = AvaliablePage.Dequeue();
-                            url = new Uri(SiteRoot, s);
-                        }
-                        var req = CreateRequest(url, header, null, content);
+                        if (AvaliablePage.Count == 0)
+                            break;
+                        var s = AvaliablePage.Dequeue();
+                        var url = new Uri(SiteRoot, s);
+                        var req = CreateRequest(url, header, null, null);
                         var res = (HttpWebResponse)req.GetResponse();
-                        bool isLoggined = false;
+                        var isLoggined = false;
                         ProcessResponse(req, res, ref isLoggined);
                     }
                     catch
                     {
-                        continue;
+                        // ignored
                     }
-
-
-
                 }
                 catch
                 {
-
+                    // ignored
                 }
             }
             IsRunning = false;
         }
         private HttpWebRequest CreateRequest(Uri page, WebHeaderCollection header, string contentType, string content, bool KeppAlive = true)
         {
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(new Uri(SiteRoot, page));
+            var request = (HttpWebRequest)WebRequest.Create(new Uri(SiteRoot, page));
             //if (header != null)
             //    foreach (string key in header.Keys)
             //    {
@@ -107,8 +95,8 @@ namespace Crawler
                 return request;
             request.ContentType = contentType;
             request.Method = "POST";
-           // request.ContentLength = Encoding.UTF8.GetByteCount(content);
-            using (StreamWriter writer = new StreamWriter(request.GetRequestStream()))
+            // request.ContentLength = Encoding.UTF8.GetByteCount(content);
+            using (var writer = new StreamWriter(request.GetRequestStream()))
             {
                 //writer.Write(Encoding.UTF8.GetBytes(content));
                 writer.Write(content);
@@ -166,20 +154,20 @@ namespace Crawler
             {
                 content = reader.ReadToEnd();
             }
-            HtmlParser.HtmlParser parser = new HtmlParser.HtmlParser();
-            parser.Parse(content);
+            var parser = new HtmlParser.Parser();
+            parser.Load(content);
 
-            var loginform = parser.GetForm(LoginPage.AbsolutePath, "POST");
+            var loginform = parser.GetForm("login.php", "POST");
             if (loginform == null)
                 loginform = parser.GetForm(LoginPage.AbsolutePath.Substring(1), "POST");
             if (loginform == null)
                 return false;
             content = "";
-            foreach (HtmlNode node in loginform.SelectNodes("//input"))
+            foreach (var node in loginform.SelectNodes("//input"))
             {
-                HtmlAttribute name = node.Attributes["name"];
-                HtmlAttribute value = node.Attributes["value"];
-                if (name == null || string.IsNullOrEmpty(name.Value))
+                var name = node.Attributes["name"];
+                var value = node.Attributes["value"];
+                if (string.IsNullOrEmpty(name?.Value))
                     continue;
                 if (LoginData.Keys.Contains(name.Value))
                 {
@@ -194,12 +182,18 @@ namespace Crawler
                     content += name.Value + "=&";
                 }
             }
+            header["User-Agent"] =
+                "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36";
+            header["Accept"] = "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8";
+            header["Referer"] = "http://localhost:9797/dvwa/login.php";
+            header["Accept-Encoding"] = "gzip, deflate, br";
+            header["Accept-Language"] = "en-US,en;q=0.8,fa;q=0.6";
             req = CreateRequest(LoginPage, header, "application/x-www-form-urlencoded;charset=utf-8", content.Substring(0, content.Length - 1), false);
             res = (HttpWebResponse)req.GetResponse();
             if (!string.IsNullOrEmpty(res.Headers["Set-Cookie"]))
                 Cookies.Add(res.Headers["Set-Cookie"]);
 
-            bool isLoggined = false;
+            var isLoggined = false;
             var text = new StreamReader(res.GetResponseStream()).ReadToEnd();
             ProcessResponse(req, res, ref isLoggined);
             return isLoggined;

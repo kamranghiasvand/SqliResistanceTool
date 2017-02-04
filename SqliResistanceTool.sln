@@ -1,15 +1,15 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.21005.1
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SqliResistanceTool", "SqliResistanceTool\SqliResistanceTool.csproj", "{855B5A84-874A-411D-903E-8620547C0F44}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Crawler", "Crawler\Crawler.csproj", "{0F0B9313-28CF-4FCD-9129-1915C8D1EB67}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SqliResistanceModel", "SqliResistanceModel\SqliResistanceModel.csproj", "{99ED09CE-6839-48D4-9313-2A5CCF3F0D6C}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HtmlParser", "HtmlParser\HtmlParser.csproj", "{754CF9EE-4A39-482B-BE31-056C72F44FEA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SeleniumCrawler", "SeleniumCrawler\SeleniumCrawler.csproj", "{A534FC52-5D94-4AAF-A22B-01C28DF710F3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,10 +21,6 @@ Global
 		{855B5A84-874A-411D-903E-8620547C0F44}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{855B5A84-874A-411D-903E-8620547C0F44}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{855B5A84-874A-411D-903E-8620547C0F44}.Release|Any CPU.Build.0 = Release|Any CPU
-		{0F0B9313-28CF-4FCD-9129-1915C8D1EB67}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{0F0B9313-28CF-4FCD-9129-1915C8D1EB67}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{0F0B9313-28CF-4FCD-9129-1915C8D1EB67}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{0F0B9313-28CF-4FCD-9129-1915C8D1EB67}.Release|Any CPU.Build.0 = Release|Any CPU
 		{99ED09CE-6839-48D4-9313-2A5CCF3F0D6C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{99ED09CE-6839-48D4-9313-2A5CCF3F0D6C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{99ED09CE-6839-48D4-9313-2A5CCF3F0D6C}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -33,6 +29,10 @@ Global
 		{754CF9EE-4A39-482B-BE31-056C72F44FEA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{754CF9EE-4A39-482B-BE31-056C72F44FEA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{754CF9EE-4A39-482B-BE31-056C72F44FEA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A534FC52-5D94-4AAF-A22B-01C28DF710F3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A534FC52-5D94-4AAF-A22B-01C28DF710F3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A534FC52-5D94-4AAF-A22B-01C28DF710F3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A534FC52-5D94-4AAF-A22B-01C28DF710F3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

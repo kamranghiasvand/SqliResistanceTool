@@ -1,20 +1,16 @@
-﻿using HtmlAgilityPack;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml;
-using System.Xml.XPath;
+using HtmlAgilityPack;
 
 namespace HtmlParser
 {
-    public class HtmlParser
+    public class Parser
     {
-        HtmlDocument Document = new HtmlDocument();
-        public void Parse(string html)
+        readonly HtmlDocument document = new HtmlDocument();
+        public void Load(string html)
         {
-            Document.LoadHtml(html);
+            HtmlNode.ElementsFlags.Remove("form");
+            document.LoadHtml(html);
         }
         public HtmlNode GetForm(string action, string method)
         {
@@ -42,22 +38,26 @@ namespace HtmlParser
 
                 //var element = nav.SelectSingleNode(xpath);              
 
-                return Document.DocumentNode.SelectSingleNode("//form[translate(@action,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz')='" + action + "' "+
+                return document.DocumentNode.SelectSingleNode("//form[translate(@action,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz')='" + action + "' " +
                 "and translate(@method,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz')='" + method + "']");
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return null;
             }
         }
-        public HtmlNodeCollection GetForms(Dictionary<string,string> attribs)
-        {          
+        public HtmlNodeCollection GetForms(Dictionary<string, string> attribs = null)
+        {
             if (attribs == null)
-                throw new ArgumentNullException("attrib", "");
+                attribs = new Dictionary<string, string>();
             try
             {
                 if (attribs.Count == 0)
-                    return Document.DocumentNode.SelectNodes("//form");
+                {
+                    var ret = document.DocumentNode.SelectNodes("//form");
+                    if (ret == null)
+                        return new HtmlNodeCollection(document.DocumentNode);
+                }
                 var restrict = "";
                 foreach (var key in attribs.Keys)
                 {
@@ -65,21 +65,35 @@ namespace HtmlParser
                     restrict += " and ";
                 }
                 restrict = restrict.Substring(0, restrict.Length - 5);
-                return Document.DocumentNode.SelectNodes("//form[" + restrict + "]");
+                var ret1= document.DocumentNode.SelectNodes("//form[" + restrict + "]");
+                if (ret1 == null)
+                    return new HtmlNodeCollection(document.DocumentNode);
+                return ret1;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                return null;
+                return new HtmlNodeCollection(document.DocumentNode);
             }
         }
         public HtmlNode GetElementById(string id)
         {
-            return Document.GetElementbyId(id);
+            return document.GetElementbyId(id);
         }
         public HtmlNodeCollection GetNodes(string xpath)
         {
-            return Document.DocumentNode.SelectNodes(xpath);
+            var ret= document.DocumentNode.SelectNodes(xpath);
+            if (ret == null)
+                return new HtmlNodeCollection(document.DocumentNode);
+            return ret;
+
         }
 
+        public HtmlNodeCollection GetLinks()
+        {
+            var ret= document.DocumentNode.SelectNodes("//a");
+            if (ret == null)
+                return new HtmlNodeCollection(document.DocumentNode);
+            return ret;
+        }
     }
 }
