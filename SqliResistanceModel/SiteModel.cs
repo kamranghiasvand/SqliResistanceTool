@@ -36,7 +36,9 @@ namespace SqliResistanceModel
         public string LastFailReason { get; set; }
         public bool IsExternalLink(Uri link)
         {
-            return Uri.Compare(new Uri(SiteUrl.Authority), new Uri(link.Authority), UriComponents.Host, UriFormat.SafeUnescaped, StringComparison.CurrentCulture)!=0;
+            var another = link.Scheme + "://" + link.Authority;
+            var self = SiteUrl.Scheme + "://" + SiteUrl.Authority;
+            return !(new Uri(self).Equals(new Uri(another)));
 
         }
     }
@@ -96,12 +98,12 @@ namespace SqliResistanceModel
             //}
         }
 
-        public static Dictionary<string,string> DeserializeDict(string dic)
+        public static Dictionary<string, string> DeserializeDict(string dic)
         {
             var rootElement = XElement.Parse(dic);
             return rootElement.Elements().ToDictionary(el => el.Name.LocalName, el => el.Value);
         }
 
-      
+
     }
 }

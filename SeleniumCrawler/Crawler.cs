@@ -1,11 +1,14 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data.Entity;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
 using HtmlAgilityPack;
 using HtmlParser;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Firefox;
+using OpenQA.Selenium.Support.UI;
 using SqliResistanceModel;
 
 namespace SeleniumCrawler
@@ -65,17 +68,17 @@ namespace SeleniumCrawler
                             if (site.VisitedLinks.Contains(url.AbsoluteUri))
                                 continue;
 
-                            site.VisitedLinks.Add(url.AbsoluteUri);
-                            dbContext.Entry(site).State = EntityState.Modified;
-                            dbContext.SaveChanges();
-
                             driver.Navigate().GoToUrl(url);
+                            Thread.Sleep(500);
                             if (site.LoginInfo != null && site.LoginInfo.IsValid() && site.LoginInfo.LoginPage.Equals(new Uri(driver.Url)))
                                 if (!TryLogin(site))
                                 {
                                     failedToLogin = true;
                                     break;
                                 }
+                            site.VisitedLinks.Add(url.AbsoluteUri);
+                            dbContext.Entry(site).State = EntityState.Modified;
+                            dbContext.SaveChanges();
                             ParseContent(site, dbContext, url);
                         }
                         if (failedToLogin)
@@ -97,6 +100,19 @@ namespace SeleniumCrawler
             driver.Quit();
         }
 
+        private bool IsInList(ICollection<string> list, Uri link)
+        {
+
+            try
+            {
+                return list != null && list.Select(item => new Uri(item)).Contains(link);
+            }
+            catch
+            {
+                return true;
+               
+            }
+        }
         bool TryLogin(SiteModel site)
         {
             try
@@ -132,6 +148,7 @@ namespace SeleniumCrawler
                         break;
                 }
                 element?.Click();
+                Thread.Sleep(2000);
                 return !site.LoginInfo.LoginPage.Equals(new Uri(driver.Url));
             }
             catch (Exception ex)
@@ -181,17 +198,26 @@ namespace SeleniumCrawler
 
                 #region Links
 
-                foreach (var link in  parser.GetLinks())
+                foreach (var link in parser.GetLinks())
                 {
-                    var attr = link.Attributes["href"];
-                    if (string.IsNullOrEmpty( attr?.Value))
-                        continue;
-                    var href = new Uri(url, attr.Value);
-                    if (site.VisitedLinks.Contains(href.AbsoluteUri))
-                        continue;
-                    if (site.IsExternalLink(href))
-                        continue;
-                    site.AvailableLinks.Add(href.AbsoluteUri);
+                    try
+                    {
+
+                        var attr = link.Attributes["href"];
+                        if (string.IsNullOrEmpty(attr?.Value))
+                            continue;
+                        var href = new Uri(url, attr.Value);
+                        if (site.VisitedLinks.Contains(href.AbsoluteUri))
+                            continue;
+                        if (site.IsExternalLink(href))
+                            continue;
+                        if (!IsInList(site.AvailableLinks,href))
+                            site.AvailableLinks.Add(href.AbsoluteUri);
+                    }
+                    catch
+                    {
+
+                    }
                 }
 
                 #endregion
@@ -200,8 +226,6 @@ namespace SeleniumCrawler
             }
             catch (Exception ex)
             {
-
-                throw;
             }
         }
         private FormModel HtmlNodeFormToFormModel(HtmlNode item)
