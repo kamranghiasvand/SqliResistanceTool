@@ -53,7 +53,7 @@ namespace SqliResistanceTool
         [ConfigurationProperty("LoginUri", IsRequired = false)]
         public string LoginUri
         {
-            get { return (string)this["Loginuri"]; }
+            get { return (string)this["LoginUri"]; }
             set { this["LoginUri"] = value; }
         }
         [ConfigurationProperty("LoginData", IsDefaultCollection = true)]
