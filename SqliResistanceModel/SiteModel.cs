@@ -28,8 +28,8 @@ namespace SqliResistanceModel
 
         public virtual ICollection<PageModel> Pages { get; set; } = new List<PageModel>();
         public virtual LoginInfoModel LoginInfo { get; set; }
-        public virtual ICollection<string> VisitedLinks { get; set; } = new List<string>();
         public virtual ICollection<string> AvailableLinks { get; set; } = new List<string>();
+       
         public bool CrawlingDone { get; set; }
         public DateTime StartDate { get; set; } = new DateTime(2000, 1, 1);
         public DateTime FinishDate { get; set; } = new DateTime(2000, 1, 1);

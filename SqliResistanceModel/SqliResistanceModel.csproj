@@ -61,13 +61,10 @@
     <Compile Include="ElementSearchModel.cs" />
     <Compile Include="FormInputModel.cs" />
     <Compile Include="FormModel.cs" />
-    <Compile Include="Migrations\201702041251561_1st.cs" />
-    <Compile Include="Migrations\201702041251561_1st.Designer.cs">
-      <DependentUpon>201702041251561_1st.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\201702041447417_2nd.cs" />
-    <Compile Include="Migrations\201702041447417_2nd.Designer.cs">
-      <DependentUpon>201702041447417_2nd.cs</DependentUpon>
+    <Compile Include="FormSelectModel.cs" />
+    <Compile Include="Migrations\201702101514225_1st.cs" />
+    <Compile Include="Migrations\201702101514225_1st.Designer.cs">
+      <DependentUpon>201702101514225_1st.cs</DependentUpon>
     </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="PageModel.cs" />
@@ -91,11 +88,8 @@
     <None Include="Properties\SlowCheetah\SlowCheetah.Transforms.targets" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Migrations\201702041251561_1st.resx">
-      <DependentUpon>201702041251561_1st.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\201702041447417_2nd.resx">
-      <DependentUpon>201702041447417_2nd.cs</DependentUpon>
+    <EmbeddedResource Include="Migrations\201702101514225_1st.resx">
+      <DependentUpon>201702101514225_1st.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

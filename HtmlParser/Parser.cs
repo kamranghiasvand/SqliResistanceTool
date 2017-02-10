@@ -57,6 +57,7 @@ namespace HtmlParser
                     var ret = document.DocumentNode.SelectNodes("//form");
                     if (ret == null)
                         return new HtmlNodeCollection(document.DocumentNode);
+                    return ret;
                 }
                 var restrict = "";
                 foreach (var key in attribs.Keys)

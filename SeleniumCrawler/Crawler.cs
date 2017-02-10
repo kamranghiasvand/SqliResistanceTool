@@ -7,6 +7,7 @@ using System.Threading;
 using HtmlAgilityPack;
 using HtmlParser;
 using OpenQA.Selenium;
+using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Firefox;
 using OpenQA.Selenium.Support.UI;
 using SqliResistanceModel;
@@ -18,7 +19,7 @@ namespace SeleniumCrawler
 
         public bool IsRunning { get; private set; }
 
-        private readonly IWebDriver driver = new FirefoxDriver();
+        private readonly IWebDriver driver = new ChromeDriver();
         private readonly Thread thread;
 
         public Crawler()
@@ -49,7 +50,10 @@ namespace SeleniumCrawler
                     {
                         var site = dbContext.Sites.FirstOrDefault(m => !m.CrawlingDone);
                         if (site == null)
+                        {
+                            IsRunning = false;
                             break;
+                        }
                         if (site.StartDate.Equals(new DateTime(2000, 1, 1)))
                         {
                             site.StartDate = DateTime.Now;
@@ -65,9 +69,8 @@ namespace SeleniumCrawler
                             var urlstring = site.AvailableLinks.First();
                             site.AvailableLinks.Remove(urlstring);
                             var url = new Uri(site.SiteUrl, urlstring);
-                            if (site.VisitedLinks.Contains(url.AbsoluteUri))
+                            if (site.Pages.Any(m => m.Url.Equals(url)))
                                 continue;
-
                             driver.Navigate().GoToUrl(url);
                             Thread.Sleep(500);
                             if (site.LoginInfo != null && site.LoginInfo.IsValid() && site.LoginInfo.LoginPage.Equals(new Uri(driver.Url)))
@@ -76,9 +79,9 @@ namespace SeleniumCrawler
                                     failedToLogin = true;
                                     break;
                                 }
-                            site.VisitedLinks.Add(url.AbsoluteUri);
-                            dbContext.Entry(site).State = EntityState.Modified;
-                            dbContext.SaveChanges();
+                                else
+                                    driver.Navigate().GoToUrl(url);
+
                             ParseContent(site, dbContext, url);
                         }
                         if (failedToLogin)
@@ -88,7 +91,11 @@ namespace SeleniumCrawler
                             site.CrawlingDone = true;
                             dbContext.Entry(site).State = EntityState.Modified;
                             dbContext.SaveChanges();
-                        }
+                        }                       
+                        site.FinishDate = DateTime.Now;
+                        site.CrawlingDone = true;
+                        dbContext.Entry(site).State = EntityState.Modified;
+                        dbContext.SaveChanges();                        
                     }
 
                 }
@@ -98,6 +105,7 @@ namespace SeleniumCrawler
                 }
             }
             driver.Quit();
+            driver.Close();
         }
 
         private bool IsInList(ICollection<string> list, Uri link)
@@ -110,7 +118,7 @@ namespace SeleniumCrawler
             catch
             {
                 return true;
-               
+
             }
         }
         bool TryLogin(SiteModel site)
@@ -184,11 +192,17 @@ namespace SeleniumCrawler
                     if (form == null)
                         continue;
                     form.Page = page;
-                    foreach (var input in item.SelectNodes("//input"))
+                    foreach (var input in item.SelectNodes(".//input"))
                     {
                         var finput = HtmlNodeInputToFormInputModel(input);
                         if (finput != null)
                             form.Inputs.Add(finput);
+                    }
+                    foreach(var select in item.SelectNodes(".//select"))
+                    {
+                        var fselect = HtmlNodeSelectToFormSelectModel(select);
+                        if (fselect != null)
+                            form.Selects.Add(fselect);
                     }
                     page.Forms.Add(form);
                     dbContext.Entry(page).State = EntityState.Modified;
@@ -207,11 +221,11 @@ namespace SeleniumCrawler
                         if (string.IsNullOrEmpty(attr?.Value))
                             continue;
                         var href = new Uri(url, attr.Value);
-                        if (site.VisitedLinks.Contains(href.AbsoluteUri))
+                        if (site.Pages.Any(m=>m.Url.Equals(href)))
                             continue;
                         if (site.IsExternalLink(href))
                             continue;
-                        if (!IsInList(site.AvailableLinks,href))
+                        if (!IsInList(site.AvailableLinks, href))
                             site.AvailableLinks.Add(href.AbsoluteUri);
                     }
                     catch
@@ -258,6 +272,36 @@ namespace SeleniumCrawler
                 return null;
             }
         }
+        private FormSelectModel HtmlNodeSelectToFormSelectModel(HtmlNode select)
+        {
+            try
+            {
+                var fselect = new FormSelectModel();
+                var attr = select.Attributes["name"];
+                if (attr != null)
+                    fselect.Name = attr.Value;
+                attr = select.Attributes["disabled"];
+                if (attr != null)
+                {
+                    if (attr.Value?.ToLower() == "disabled")
+                        fselect.Disabled = true;
+                    var res = false;
+                    if (bool.TryParse(attr.Value, out res))
+                        fselect.Disabled = res;
+                }
+                foreach(var op in select.SelectNodes(".//option"))
+                {
+                    attr = op.Attributes["value"];
+                    if (attr != null)
+                        fselect.Values.Add(attr.Value);
+                }
+                return fselect;
+            }
+            catch
+            {
+                return null;
+            }
+        }
         private FormInputModel HtmlNodeInputToFormInputModel(HtmlNode input)
         {
             try
@@ -268,10 +312,22 @@ namespace SeleniumCrawler
                     finput.Alt = attr.Value;
                 attr = input.Attributes["checked"];
                 if (attr != null)
-                    finput.Checked = bool.Parse(attr.Value);
+                {
+                    if (attr.Value?.ToLower() == "checked")
+                        finput.Checked = true;
+                    var res = false;
+                    if (bool.TryParse(attr.Value, out res))
+                        finput.Checked = res;
+                }
                 attr = input.Attributes["disabled"];
                 if (attr != null)
-                    finput.Disabled = bool.Parse(attr.Value);
+                {
+                    if (attr.Value?.ToLower() == "disabled")
+                        finput.Disabled = true;
+                    var res = false;
+                    if (bool.TryParse(attr.Value, out res))
+                        finput.Disabled = res;
+                }
                 attr = input.Attributes["maxlength"];
                 if (attr != null)
                     finput.Maxlength = int.Parse(attr.Value);
@@ -289,7 +345,7 @@ namespace SeleniumCrawler
                     finput.Src = attr.Value;
                 attr = input.Attributes["type"];
                 if (attr != null)
-                    finput.Type = (InputType)Enum.Parse(typeof(InputType), attr.Value);
+                    finput.Type = (InputType)Enum.Parse(typeof(InputType), attr.Value,true);
                 attr = input.Attributes["value"];
                 if (attr != null)
                     finput.Value = attr.Value;

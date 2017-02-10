@@ -12,47 +12,54 @@ namespace SqliResistanceTool
     {
         static void Main(string[] args)
         {
-            var url = new Uri("http://localhost:9797/dvwa/");
-            using (var dbContext = new ApplicationDbContext())
+            try
             {
-
-                var site = dbContext.Sites.FirstOrDefault(m => m.SiteUrlString == url.AbsoluteUri);
-                if (site == null)
+                var url = new Uri("http://localhost/");
+                using (var dbContext = new ApplicationDbContext())
                 {
-                    site = new SiteModel
+
+                    var site = dbContext.Sites.FirstOrDefault(m => m.SiteUrlString == url.AbsoluteUri);
+                    if (site == null)
                     {
-                        SiteUrl = url
-                    };
-                    site.LoginInfo = new LoginInfoModel
-                    {
-                        LoginPage = new Uri(site.SiteUrl, "login.php")
-                    };
-                    site.LoginInfo.LoginData = new Dictionary<string, string>
+                        site = new SiteModel
+                        {
+                            SiteUrl = url
+                        };
+                        site.LoginInfo = new LoginInfoModel
+                        {
+                            LoginPage = new Uri(site.SiteUrl, "login.php")
+                        };
+                        site.LoginInfo.LoginData = new Dictionary<string, string>
                     {
                         {"username", "admin"},
                         {"password", "password"}
                     };
-                    site.LoginInfo.LoginButton = new ElementSearchModel
+                        site.LoginInfo.LoginButton = new ElementSearchModel
+                        {
+                            By = SearchBy.Name,
+                            Value = "Login"
+                        };
+                        dbContext.Sites.Add(site);
+                        dbContext.SaveChanges();
+                    }
+                    else
                     {
-                        By = SearchBy.Name,
-                        Value = "Login"
-                    };
-                    dbContext.Sites.Add(site);
-                    dbContext.SaveChanges();
-                }
-                else
-                {
-                    site.VisitedLinks.Clear();
-                    site.AvailableLinks.Clear();
-                    site.CrawlingDone = false;
-                    dbContext.Entry(site).State = System.Data.Entity.EntityState.Modified;
-                    dbContext.SaveChanges();
-                }
+                        site.AvailableLinks.Clear();
+                        site.CrawlingDone = false;
+                        dbContext.Entry(site).State = System.Data.Entity.EntityState.Modified;
+                        dbContext.SaveChanges();
+                    }
 
 
+                }
+                var crawler = new Crawler();
+                crawler.Start();
             }
-            var crawler = new Crawler();
-            crawler.Start();
+            catch(Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+            }
+            Console.ReadKey();
         }
     }
 }

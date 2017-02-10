@@ -9,6 +9,7 @@ namespace SqliResistanceModel
         public int Id { get; set;}
         public virtual PageModel Page { get; set; }
         public virtual ICollection<FormInputModel> Inputs { get; set; } = new List<FormInputModel>();
+        public virtual ICollection<FormSelectModel> Selects { get; set; } = new List<FormSelectModel>();
         public string AcceptCharset { get; set; }
         public string Action { get; set; }
         public string Enctype { get; set; }
