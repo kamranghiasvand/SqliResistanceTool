@@ -4,6 +4,7 @@ using System.Data.Entity;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using HtmlAgilityPack;
 using HtmlParser;
 using OpenQA.Selenium;
@@ -18,8 +19,12 @@ namespace SeleniumCrawler
     {
 
         public bool IsRunning { get; private set; }
+        string script = "window.__mySecretGlobal = 'false'; " +
+             "window.addEventListener('load', function(){ " +
+                  "window.__mySecretGlobal = 'true'; " +
+             "});";
 
-        private readonly IWebDriver driver = new ChromeDriver();
+        private IWebDriver driver;
         private readonly Thread thread;
 
         public Crawler()
@@ -28,13 +33,18 @@ namespace SeleniumCrawler
         }
         public void Start()
         {
+            if (IsRunning)
+                return;
             IsRunning = true;
+           
             thread.Start();
 
         }
 
         public void Stop()
         {
+            if (!IsRunning)
+                return;
             IsRunning = false;
             thread?.Join();
         }
@@ -71,8 +81,11 @@ namespace SeleniumCrawler
                             var url = new Uri(site.SiteUrl, urlstring);
                             if (site.Pages.Any(m => m.Url.Equals(url)))
                                 continue;
+                            if(driver==null)
+                                driver = new ChromeDriver();
+                            
                             driver.Navigate().GoToUrl(url);
-                            Thread.Sleep(500);
+                            Thread.Sleep(300);                          
                             if (site.LoginInfo != null && site.LoginInfo.IsValid() && site.LoginInfo.LoginPage.Equals(new Uri(driver.Url)))
                                 if (!TryLogin(site))
                                 {
@@ -91,11 +104,11 @@ namespace SeleniumCrawler
                             site.CrawlingDone = true;
                             dbContext.Entry(site).State = EntityState.Modified;
                             dbContext.SaveChanges();
-                        }                       
+                        }
                         site.FinishDate = DateTime.Now;
                         site.CrawlingDone = true;
                         dbContext.Entry(site).State = EntityState.Modified;
-                        dbContext.SaveChanges();                        
+                        dbContext.SaveChanges();
                     }
 
                 }
@@ -104,10 +117,9 @@ namespace SeleniumCrawler
                     // ignored
                 }
             }
-            driver.Quit();
-            driver.Close();
+            driver?.Close();
         }
-
+    
         private bool IsInList(ICollection<string> list, Uri link)
         {
 
@@ -198,7 +210,7 @@ namespace SeleniumCrawler
                         if (finput != null)
                             form.Inputs.Add(finput);
                     }
-                    foreach(var select in item.SelectNodes(".//select"))
+                    foreach (var select in item.SelectNodes(".//select"))
                     {
                         var fselect = HtmlNodeSelectToFormSelectModel(select);
                         if (fselect != null)
@@ -221,7 +233,7 @@ namespace SeleniumCrawler
                         if (string.IsNullOrEmpty(attr?.Value))
                             continue;
                         var href = new Uri(url, attr.Value);
-                        if (site.Pages.Any(m=>m.Url.Equals(href)))
+                        if (site.Pages.Any(m => m.Url.Equals(href)))
                             continue;
                         if (site.IsExternalLink(href))
                             continue;
@@ -289,7 +301,7 @@ namespace SeleniumCrawler
                     if (bool.TryParse(attr.Value, out res))
                         fselect.Disabled = res;
                 }
-                foreach(var op in select.SelectNodes(".//option"))
+                foreach (var op in select.SelectNodes(".//option"))
                 {
                     attr = op.Attributes["value"];
                     if (attr != null)
@@ -345,7 +357,7 @@ namespace SeleniumCrawler
                     finput.Src = attr.Value;
                 attr = input.Attributes["type"];
                 if (attr != null)
-                    finput.Type = (InputType)Enum.Parse(typeof(InputType), attr.Value,true);
+                    finput.Type = (InputType)Enum.Parse(typeof(InputType), attr.Value, true);
                 attr = input.Attributes["value"];
                 if (attr != null)
                     finput.Value = attr.Value;
