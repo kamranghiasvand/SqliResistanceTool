@@ -18,7 +18,12 @@ namespace SqliResistanceModel
         [NotMapped]
         public Uri SiteUrl
         {
-            get { return siteurl ?? (siteurl = new Uri(SiteUrlString)); }
+            get
+            {
+                if (string.IsNullOrEmpty(SiteUrlString))
+                    return null;
+                return siteurl ?? (siteurl = new Uri(SiteUrlString));
+            }
             set
             {
                 siteurl = value;
@@ -29,7 +34,7 @@ namespace SqliResistanceModel
         public virtual ICollection<PageModel> Pages { get; set; } = new List<PageModel>();
         public virtual LoginInfoModel LoginInfo { get; set; }
         public virtual ICollection<string> AvailableLinks { get; set; } = new List<string>();
-       
+
         public bool CrawlingDone { get; set; }
         public DateTime StartDate { get; set; } = new DateTime(2000, 1, 1);
         public DateTime FinishDate { get; set; } = new DateTime(2000, 1, 1);
@@ -46,6 +51,9 @@ namespace SqliResistanceModel
     {
         [Key]
         public int Id { get; set; }
+
+        public string SpecialTextBeforeLoginPage { get; set; }
+        public string SpecialTextAfterLoginPage { get; set; }
         [DataType(DataType.Url)]
         public string LoginPageString { get; set; }
 
@@ -54,7 +62,11 @@ namespace SqliResistanceModel
         [NotMapped]
         public Uri LoginPage
         {
-            get { return loginPage ?? (loginPage = new Uri(LoginPageString)); }
+            get
+            {
+                if (string.IsNullOrEmpty(LoginPageString)) return null;
+                return loginPage ?? (loginPage = new Uri(LoginPageString));
+            }
             set
             {
                 loginPage = value;
@@ -72,7 +84,13 @@ namespace SqliResistanceModel
 
         public bool IsValid()
         {
-            return LoginPage != null && LoginData.Count > 1 && LoginButton != null;
+            if (LoginPage == null && string.IsNullOrEmpty(SpecialTextBeforeLoginPage) && string.IsNullOrEmpty(SpecialTextAfterLoginPage))
+                return true;
+            if (LoginPage != null)
+                return LoginData.Count > 1 && LoginButton != null;
+            if (string.IsNullOrEmpty(SpecialTextBeforeLoginPage) && string.IsNullOrEmpty(SpecialTextAfterLoginPage))
+                return true;
+            return false;
         }
 
         public static string SerializeDict(IDictionary<string, string> dict)

@@ -91,10 +91,11 @@ namespace HtmlParser
 
         public HtmlNodeCollection GetLinks()
         {
-            var ret= document.DocumentNode.SelectNodes("//a");
-            if (ret == null)
-                return new HtmlNodeCollection(document.DocumentNode);
-            return ret;
+                var ret = document.DocumentNode.SelectNodes("//a");
+                if (ret == null)
+                    return new HtmlNodeCollection(document.DocumentNode);
+                return ret;
+            
         }
     }
 }

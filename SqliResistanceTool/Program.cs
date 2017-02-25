@@ -35,8 +35,12 @@ namespace SqliResistanceTool
                             {
                                 site.LoginInfo = new LoginInfoModel
                                 {
-                                    LoginPage = new Uri(site.SiteUrl, item.Login.LoginUri)
+                                   
+                                    SpecialTextBeforeLoginPage = item.Login.SpecialTextBeforeLoginPage,
+                                    SpecialTextAfterLoginPage = item.Login.SpecialTextAfterLoginPage
                                 };
+                                if (!string.IsNullOrEmpty(item.Login.LoginUri ))
+                                   site.LoginInfo.LoginPage = new Uri(site.SiteUrl, item.Login.LoginUri);
                                 site.LoginInfo.LoginData = new Dictionary<string, string>();
                                 foreach(LoginData rec in item.Login.LoginData)                                
                                     site.LoginInfo.LoginData.Add(rec.Key, rec.Value);                                

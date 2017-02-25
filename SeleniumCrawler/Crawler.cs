@@ -86,8 +86,8 @@ namespace SeleniumCrawler
                             
                             driver.Navigate().GoToUrl(url);
                             Thread.Sleep(300);                          
-                            if (site.LoginInfo != null && site.LoginInfo.IsValid() && site.LoginInfo.LoginPage.Equals(new Uri(driver.Url)))
-                                if (!TryLogin(site))
+                            if (site.LoginInfo != null && site.LoginInfo.IsValid() && site.LoginInfo.LoginPage!=null&& site.LoginInfo.LoginPage.Equals(new Uri(driver.Url)))
+                                if (!TryLoginWithUrl(site))
                                 {
                                     failedToLogin = true;
                                     break;
@@ -95,7 +95,7 @@ namespace SeleniumCrawler
                                 else
                                     driver.Navigate().GoToUrl(url);
 
-                            ParseContent(site, dbContext, url);
+                           ParseContent(site, dbContext, url,out failedToLogin);
                         }
                         if (failedToLogin)
                         {
@@ -133,7 +133,7 @@ namespace SeleniumCrawler
 
             }
         }
-        bool TryLogin(SiteModel site)
+        bool TryLoginWithUrl(SiteModel site)
         {
             try
             {
@@ -177,12 +177,78 @@ namespace SeleniumCrawler
             }
         }
 
-        private void ParseContent(SiteModel site, ApplicationDbContext dbContext, Uri url)
+        bool TryLoginWithContent(SiteModel site)
         {
             try
             {
-                #region Parse Content
+                if (string.IsNullOrEmpty(site.LoginInfo.SpecialTextAfterLoginPage))
+                    return false;
+                foreach (var key in site.LoginInfo.LoginData.Keys)
+                    driver.FindElement(By.Name(key)).SendKeys(site.LoginInfo.LoginData[key]);
+                IWebElement element = null;
+                switch (site.LoginInfo.LoginButton.By)
+                {
+                    case SqliResistanceModel.SearchBy.ClassName:
+                        element = driver.FindElement(By.ClassName(site.LoginInfo.LoginButton.Value));
+                        break;
+                    case SqliResistanceModel.SearchBy.CssSelector:
+                        element = driver.FindElement(By.CssSelector(site.LoginInfo.LoginButton.Value));
+                        break;
+                    case SqliResistanceModel.SearchBy.Id:
+                        element = driver.FindElement(By.Id(site.LoginInfo.LoginButton.Value));
+                        break;
+                    case SqliResistanceModel.SearchBy.LinkText:
+                        element = driver.FindElement(By.LinkText(site.LoginInfo.LoginButton.Value));
+                        break;
+                    case SqliResistanceModel.SearchBy.Name:
+                        element = driver.FindElement(By.Name(site.LoginInfo.LoginButton.Value));
+                        break;
+                    case SqliResistanceModel.SearchBy.PartialLinkText:
+                        element = driver.FindElement(By.PartialLinkText(site.LoginInfo.LoginButton.Value));
+                        break;
+                    case SqliResistanceModel.SearchBy.TagName:
+                        element = driver.FindElement(By.TagName(site.LoginInfo.LoginButton.Value));
+                        break;
+                    case SqliResistanceModel.SearchBy.XPath:
+                        element = driver.FindElement(By.XPath(site.LoginInfo.LoginButton.Value));
+                        break;
+                }
+                element?.Click();
+                Thread.Sleep(2000);
+                if (string.IsNullOrEmpty(driver.PageSource))
+                    return false;
+               
+                if(driver.PageSource.Contains(site.LoginInfo.SpecialTextAfterLoginPage))
+                {
+                    site.AvailableLinks.Add(driver.Url);
+                    return true;
+                }
+                return false;
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
+        private bool IsLoginPageContent(SiteModel site, string content)
+        {
+            if (string.IsNullOrEmpty(site.LoginInfo.SpecialTextBeforeLoginPage))
+                return false;
+            if (string.IsNullOrEmpty(content))
+                return false;
+            return content.Contains(site.LoginInfo.SpecialTextBeforeLoginPage);
+        }
+        private void ParseContent(SiteModel site, ApplicationDbContext dbContext, Uri url,out bool failedToLogin)
+        {
+            failedToLogin = false;
+            try
+            {
                 var content = driver.PageSource;
+                if (IsLoginPageContent(site,content)&& !TryLoginWithContent(site))
+                {
+                    failedToLogin=true;
+                }
+                #region Parse Content
                 var page = new PageModel
                 {
                     Url = url,
@@ -204,18 +270,35 @@ namespace SeleniumCrawler
                     if (form == null)
                         continue;
                     form.Page = page;
-                    foreach (var input in item.SelectNodes(".//input"))
+                    try
                     {
-                        var finput = HtmlNodeInputToFormInputModel(input);
-                        if (finput != null)
-                            form.Inputs.Add(finput);
+                        foreach (var input in item.SelectNodes(".//input"))
+                        {
+                            try
+                            {
+                                var finput = HtmlNodeInputToFormInputModel(input);
+                                if (finput != null)
+                                    form.Inputs.Add(finput);
+                            }
+                            catch { }
+                        }
                     }
-                    foreach (var select in item.SelectNodes(".//select"))
+                    catch { }
+                    try
                     {
-                        var fselect = HtmlNodeSelectToFormSelectModel(select);
-                        if (fselect != null)
-                            form.Selects.Add(fselect);
+                        foreach (var select in item.SelectNodes(".//select"))
+                        {
+                            try
+                            {
+                                var fselect = HtmlNodeSelectToFormSelectModel(select);
+                                if (fselect != null)
+                                    form.Selects.Add(fselect);
+                            }
+                            catch { }
+                        }
                     }
+                    catch { }
+
                     page.Forms.Add(form);
                     dbContext.Entry(page).State = EntityState.Modified;
                     dbContext.SaveChanges();
@@ -348,16 +431,29 @@ namespace SeleniumCrawler
                     finput.Name = attr.Value;
                 attr = input.Attributes["readonly"];
                 if (attr != null)
-                    finput.Readonly = bool.Parse(attr.Value);
+                {
+                    var res = false;
+                    if (bool.TryParse(attr.Value, out res))
+                        finput.Readonly = res;
+                   
+                }
                 attr = input.Attributes["size"];
                 if (attr != null)
-                    finput.Size = int.Parse(attr.Value);
+                {
+                    int res = 0;
+                    if (int.TryParse(attr.Value, out res))
+                        finput.Size = res;
+                }
                 attr = input.Attributes["src"];
                 if (attr != null)
                     finput.Src = attr.Value;
                 attr = input.Attributes["type"];
                 if (attr != null)
-                    finput.Type = (InputType)Enum.Parse(typeof(InputType), attr.Value, true);
+                {
+                    InputType type = InputType.Text;
+                    if (Enum.TryParse(attr.Value, true, out type))
+                        finput.Type = type;
+                }
                 attr = input.Attributes["value"];
                 if (attr != null)
                     finput.Value = attr.Value;

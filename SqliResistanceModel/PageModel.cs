@@ -15,7 +15,10 @@ namespace SqliResistanceModel
         [NotMapped]
         public Uri Url
         {
-            get { return url ?? (url = new Uri(UrlString)); }
+            get {
+                if (string.IsNullOrEmpty(UrlString))
+                    return null;
+                return url ?? (url = new Uri(UrlString)); }
             set
             {
                 url = value;

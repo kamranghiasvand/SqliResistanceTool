@@ -5,6 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Configuration;
 using SqliResistanceModel;
+using System.ComponentModel;
+using System.Globalization;
 
 namespace SqliResistanceTool
 {
@@ -61,6 +63,18 @@ namespace SqliResistanceTool
         {
             get { return (LoginDataCollection)this["LoginData"]; }
         }
+        [ConfigurationProperty("SpecialTextBeforeLoginPage", IsRequired =false)]
+        public string SpecialTextBeforeLoginPage
+        {
+            get { return (string)this["SpecialTextBeforeLoginPage"]; }
+            set { this["SpecialTextBeforeLoginPage"] = value; }
+        }
+        [ConfigurationProperty("SpecialTextAfterLoginPage", IsRequired = false)]
+        public string SpecialTextAfterLoginPage
+        {
+            get { return (string)this["SpecialTextAfterLoginPage"]; }
+            set { this["SpecialTextAfterLoginPage"] = value; }
+        }
         [ConfigurationProperty("LoginButton", IsRequired = false)]
         public SearchUiElement LoginButton
         {
@@ -105,11 +119,19 @@ namespace SqliResistanceTool
             set { this["By"] = value; }
         }
         [ConfigurationProperty("Value", IsRequired = true)]
+       // [TypeConverter(typeof(CaseSensitiveStringConvertor))]
         public string Value
         {
             get { return (string)this["Value"]; }
             set { this["Value"] = value; }
         }
 
+    }
+    public class CaseSensitiveStringConvertor : ConfigurationConverterBase
+    {
+        public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
+        {
+            return value.ToString();
+        }
     }
 }
