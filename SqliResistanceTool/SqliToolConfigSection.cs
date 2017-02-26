@@ -1,12 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Configuration;
+﻿using System.Configuration;
 using SqliResistanceModel;
-using System.ComponentModel;
-using System.Globalization;
 
 namespace SqliResistanceTool
 {
@@ -14,10 +7,7 @@ namespace SqliResistanceTool
     public class SqliConfig : ConfigurationSection
     {
         [ConfigurationProperty("Sites", IsDefaultCollection = true)]
-        public SiteCollection Sites
-        {
-            get { return (SiteCollection)this["Sites"]; }
-        }
+        public SiteCollection Sites => (SiteCollection)this["Sites"];
     }
     [ConfigurationCollection(typeof(SiteToProcess),AddItemName = "SiteToProcess")]
     public class SiteCollection : ConfigurationElementCollection
@@ -59,10 +49,8 @@ namespace SqliResistanceTool
             set { this["LoginUri"] = value; }
         }
         [ConfigurationProperty("LoginData", IsDefaultCollection = true)]
-        public LoginDataCollection LoginData
-        {
-            get { return (LoginDataCollection)this["LoginData"]; }
-        }
+        public LoginDataCollection LoginData => (LoginDataCollection)this["LoginData"];
+
         [ConfigurationProperty("SpecialTextBeforeLoginPage", IsRequired =false)]
         public string SpecialTextBeforeLoginPage
         {
@@ -119,7 +107,6 @@ namespace SqliResistanceTool
             set { this["By"] = value; }
         }
         [ConfigurationProperty("Value", IsRequired = true)]
-       // [TypeConverter(typeof(CaseSensitiveStringConvertor))]
         public string Value
         {
             get { return (string)this["Value"]; }
@@ -127,11 +114,5 @@ namespace SqliResistanceTool
         }
 
     }
-    public class CaseSensitiveStringConvertor : ConfigurationConverterBase
-    {
-        public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
-        {
-            return value.ToString();
-        }
-    }
+    
 }

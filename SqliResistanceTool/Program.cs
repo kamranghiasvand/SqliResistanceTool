@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using SeleniumCrawler;
 using SqliResistanceModel;
 
@@ -16,7 +14,7 @@ namespace SqliResistanceTool
             try
             {
                 var configSection = (SqliConfig)ConfigurationManager.GetSection("SqliConfig");
-                if (configSection == null || configSection.Sites?.Count == 0)
+                if (configSection?.Sites == null)
                     return;
                 foreach (SiteToProcess item in configSection.Sites)
                 {

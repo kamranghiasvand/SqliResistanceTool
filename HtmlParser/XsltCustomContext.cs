@@ -1,8 +1,7 @@
 ﻿using System;
+using System.Xml;
 using System.Xml.XPath;
 using System.Xml.Xsl;
-using System.Xml;
-using HtmlAgilityPack;
 
 namespace HtmlParser
 {
@@ -20,17 +19,15 @@ namespace HtmlParser
         {
         }
 
-        public override IXsltContextFunction ResolveFunction(string prefix, string name, XPathResultType[] ArgTypes)
+        public override IXsltContextFunction ResolveFunction(string prefix, string name, XPathResultType[] argTypes)
         {
             // Check that the function prefix is for the correct namespace
-            if (this.LookupNamespace(prefix) == NamespaceUri)
+            if (LookupNamespace(prefix) != NamespaceUri) return null;
+            // Lookup the function and return the appropriate IXsltContextFunction implementation
+            switch (name)
             {
-                // Lookup the function and return the appropriate IXsltContextFunction implementation
-                switch (name)
-                {
-                    case "CaseInsensitiveComparison":
-                        return CaseInsensitiveComparison.Instance;
-                }
+                case "CaseInsensitiveComparison":
+                    return CaseInsensitiveComparison.Instance;
             }
 
             return null;
@@ -51,43 +48,24 @@ namespace HtmlParser
             return false;
         }
 
-        public override bool Whitespace
-        {
-            get { return true; }
-        }
+        public override bool Whitespace => true;
 
         // Class implementing the XSLT Function for Case Insensitive Comparison
         class CaseInsensitiveComparison : IXsltContextFunction
         {
-            private static XPathResultType[] _argTypes = new XPathResultType[] { XPathResultType.String };
-            private static CaseInsensitiveComparison _instance = new CaseInsensitiveComparison();
+            private static readonly XPathResultType[] argTypes = { XPathResultType.String };
 
-            public static CaseInsensitiveComparison Instance
-            {
-                get { return _instance; }
-            }
+            public static CaseInsensitiveComparison Instance { get; } = new CaseInsensitiveComparison();
 
             #region IXsltContextFunction Members
 
-            public XPathResultType[] ArgTypes
-            {
-                get { return _argTypes; }
-            }
+            public XPathResultType[] ArgTypes => argTypes;
 
-            public int Maxargs
-            {
-                get { return 1; }
-            }
+            public int Maxargs => 1;
 
-            public int Minargs
-            {
-                get { return 1; }
-            }
+            public int Minargs => 1;
 
-            public XPathResultType ReturnType
-            {
-                get { return XPathResultType.Boolean; }
-            }
+            public XPathResultType ReturnType => XPathResultType.Boolean;
 
             public object Invoke(XsltContext xsltContext, object[] args, XPathNavigator navigator)
             {

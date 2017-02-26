@@ -1,16 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.Entity;
-using System.Globalization;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using HtmlAgilityPack;
 using HtmlParser;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
-using OpenQA.Selenium.Firefox;
-using OpenQA.Selenium.Support.UI;
 using SqliResistanceModel;
 
 namespace SeleniumCrawler
@@ -142,28 +138,28 @@ namespace SeleniumCrawler
                 IWebElement element = null;
                 switch (site.LoginInfo.LoginButton.By)
                 {
-                    case SqliResistanceModel.SearchBy.ClassName:
+                    case SearchBy.ClassName:
                         element = driver.FindElement(By.ClassName(site.LoginInfo.LoginButton.Value));
                         break;
-                    case SqliResistanceModel.SearchBy.CssSelector:
+                    case SearchBy.CssSelector:
                         element = driver.FindElement(By.CssSelector(site.LoginInfo.LoginButton.Value));
                         break;
-                    case SqliResistanceModel.SearchBy.Id:
+                    case SearchBy.Id:
                         element = driver.FindElement(By.Id(site.LoginInfo.LoginButton.Value));
                         break;
-                    case SqliResistanceModel.SearchBy.LinkText:
+                    case SearchBy.LinkText:
                         element = driver.FindElement(By.LinkText(site.LoginInfo.LoginButton.Value));
                         break;
-                    case SqliResistanceModel.SearchBy.Name:
+                    case SearchBy.Name:
                         element = driver.FindElement(By.Name(site.LoginInfo.LoginButton.Value));
                         break;
-                    case SqliResistanceModel.SearchBy.PartialLinkText:
+                    case SearchBy.PartialLinkText:
                         element = driver.FindElement(By.PartialLinkText(site.LoginInfo.LoginButton.Value));
                         break;
-                    case SqliResistanceModel.SearchBy.TagName:
+                    case SearchBy.TagName:
                         element = driver.FindElement(By.TagName(site.LoginInfo.LoginButton.Value));
                         break;
-                    case SqliResistanceModel.SearchBy.XPath:
+                    case SearchBy.XPath:
                         element = driver.FindElement(By.XPath(site.LoginInfo.LoginButton.Value));
                         break;
                 }
@@ -171,7 +167,7 @@ namespace SeleniumCrawler
                 Thread.Sleep(2000);
                 return !site.LoginInfo.LoginPage.Equals(new Uri(driver.Url));
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return false;
             }
@@ -188,28 +184,28 @@ namespace SeleniumCrawler
                 IWebElement element = null;
                 switch (site.LoginInfo.LoginButton.By)
                 {
-                    case SqliResistanceModel.SearchBy.ClassName:
+                    case SearchBy.ClassName:
                         element = driver.FindElement(By.ClassName(site.LoginInfo.LoginButton.Value));
                         break;
-                    case SqliResistanceModel.SearchBy.CssSelector:
+                    case SearchBy.CssSelector:
                         element = driver.FindElement(By.CssSelector(site.LoginInfo.LoginButton.Value));
                         break;
-                    case SqliResistanceModel.SearchBy.Id:
+                    case SearchBy.Id:
                         element = driver.FindElement(By.Id(site.LoginInfo.LoginButton.Value));
                         break;
-                    case SqliResistanceModel.SearchBy.LinkText:
+                    case SearchBy.LinkText:
                         element = driver.FindElement(By.LinkText(site.LoginInfo.LoginButton.Value));
                         break;
-                    case SqliResistanceModel.SearchBy.Name:
+                    case SearchBy.Name:
                         element = driver.FindElement(By.Name(site.LoginInfo.LoginButton.Value));
                         break;
-                    case SqliResistanceModel.SearchBy.PartialLinkText:
+                    case SearchBy.PartialLinkText:
                         element = driver.FindElement(By.PartialLinkText(site.LoginInfo.LoginButton.Value));
                         break;
-                    case SqliResistanceModel.SearchBy.TagName:
+                    case SearchBy.TagName:
                         element = driver.FindElement(By.TagName(site.LoginInfo.LoginButton.Value));
                         break;
-                    case SqliResistanceModel.SearchBy.XPath:
+                    case SearchBy.XPath:
                         element = driver.FindElement(By.XPath(site.LoginInfo.LoginButton.Value));
                         break;
                 }
@@ -225,7 +221,7 @@ namespace SeleniumCrawler
                 }
                 return false;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return false;
             }
@@ -280,10 +276,16 @@ namespace SeleniumCrawler
                                 if (finput != null)
                                     form.Inputs.Add(finput);
                             }
-                            catch { }
+                            catch
+                            {
+                                // ignored
+                            }
                         }
                     }
-                    catch { }
+                    catch
+                    {
+                        // ignored
+                    }
                     try
                     {
                         foreach (var select in item.SelectNodes(".//select"))
@@ -294,10 +296,16 @@ namespace SeleniumCrawler
                                 if (fselect != null)
                                     form.Selects.Add(fselect);
                             }
-                            catch { }
+                            catch
+                            {
+                                // ignored
+                            }
                         }
                     }
-                    catch { }
+                    catch
+                    {
+                        // ignored
+                    }
 
                     page.Forms.Add(form);
                     dbContext.Entry(page).State = EntityState.Modified;
@@ -325,7 +333,7 @@ namespace SeleniumCrawler
                     }
                     catch
                     {
-
+                        // ignored
                     }
                 }
 
@@ -333,8 +341,9 @@ namespace SeleniumCrawler
 
                 #endregion
             }
-            catch (Exception ex)
+            catch (Exception)
             {
+                // ignored
             }
         }
         private FormModel HtmlNodeFormToFormModel(HtmlNode item)
@@ -362,7 +371,7 @@ namespace SeleniumCrawler
                     form.Target = attr.Value;
                 return form;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return null;
             }
@@ -380,7 +389,7 @@ namespace SeleniumCrawler
                 {
                     if (attr.Value?.ToLower() == "disabled")
                         fselect.Disabled = true;
-                    var res = false;
+                    bool res;
                     if (bool.TryParse(attr.Value, out res))
                         fselect.Disabled = res;
                 }
@@ -410,7 +419,7 @@ namespace SeleniumCrawler
                 {
                     if (attr.Value?.ToLower() == "checked")
                         finput.Checked = true;
-                    var res = false;
+                    bool res;
                     if (bool.TryParse(attr.Value, out res))
                         finput.Checked = res;
                 }
@@ -419,7 +428,7 @@ namespace SeleniumCrawler
                 {
                     if (attr.Value?.ToLower() == "disabled")
                         finput.Disabled = true;
-                    var res = false;
+                    bool res;
                     if (bool.TryParse(attr.Value, out res))
                         finput.Disabled = res;
                 }
@@ -432,7 +441,7 @@ namespace SeleniumCrawler
                 attr = input.Attributes["readonly"];
                 if (attr != null)
                 {
-                    var res = false;
+                    bool res;
                     if (bool.TryParse(attr.Value, out res))
                         finput.Readonly = res;
                    
@@ -440,7 +449,7 @@ namespace SeleniumCrawler
                 attr = input.Attributes["size"];
                 if (attr != null)
                 {
-                    int res = 0;
+                    int res;
                     if (int.TryParse(attr.Value, out res))
                         finput.Size = res;
                 }
@@ -450,7 +459,7 @@ namespace SeleniumCrawler
                 attr = input.Attributes["type"];
                 if (attr != null)
                 {
-                    InputType type = InputType.Text;
+                    InputType type;
                     if (Enum.TryParse(attr.Value, true, out type))
                         finput.Type = type;
                 }
@@ -459,7 +468,7 @@ namespace SeleniumCrawler
                     finput.Value = attr.Value;
                 return finput;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return null;
             }

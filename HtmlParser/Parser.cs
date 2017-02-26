@@ -41,7 +41,7 @@ namespace HtmlParser
                 return document.DocumentNode.SelectSingleNode("//form[translate(@action,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz')='" + action + "' " +
                 "and translate(@method,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz')='" + method + "']");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return null;
             }
@@ -71,7 +71,7 @@ namespace HtmlParser
                     return new HtmlNodeCollection(document.DocumentNode);
                 return ret1;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return new HtmlNodeCollection(document.DocumentNode);
             }
